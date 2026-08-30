@@ -449,7 +449,7 @@ function calculateMetrics() {
         
         linhaStreak = `Streak mantido no Nível ${nivelAtualStreak}!`;
         linhaPremio = `🏆 Prêmio: ${premioInfo.premio}`;
-        linhaBonus = `🚀 Bônus: ${premioInfo.dolares} Dólares por aluno`;
+        linhaBonus = `🚀 Bônus: $${premioInfo.dolares} Dólares por aluno`;
         
         detailText.innerHTML = `${linhaStreak}<br>${linhaPremio}<br>${linhaBonus}${linhaAlerta}`;
     }
