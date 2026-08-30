@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level Up - KNN Idiomas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <!-- Topo com Logo -->
+        <div class="header">
+            <div class="logo-container">
+                <img src="knn idiomas.jpg" alt="Logo da Escola">
+            </div>
+            <div>
+                <h1>Controle de Frequência</h1>
+                <p class="subtitle">Streak & Gestão de Bonificação</p>
+            </div>
+        </div>
+
+        <!-- Seletores (Mês, Professor e Turma) -->
+        <div class="card">
+            <!-- Seleção do Mês -->
+            <div class="form-group">
+                <label for="monthSelect">Mês de Referência</label>
+                <select id="monthSelect" onchange="onMonthOrClassChange()">
+                    <!-- 2026 -->
+                    <option value="8_2026" selected>Setembro de 2026</option>
+                    <option value="9_2026">Outubro de 2026</option>
+                    <option value="10_2026">Novembro de 2026</option>
+                    <option value="11_2026">Dezembro de 2026</option>
+                    <!-- 2027 -->
+                    <option value="0_2027">Janeiro de 2027</option>
+                    <option value="1_2027">Fevereiro de 2027</option>
+                    <option value="2_2027">Março de 2027</option>
+                    <option value="3_2027">Abril de 2027</option>
+                    <option value="4_2027">Maio de 2027</option>
+                    <option value="5_2027">Junho de 2027</option>
+                    <option value="6_2027">Julho de 2027</option>
+                    <option value="7_2027">Agosto de 2027</option>
+                    <option value="8_2027">Setembro de 2027</option>
+                    <option value="9_2027">Outubro de 2027</option>
+                    <option value="10_2027">Novembro de 2027</option>
+                    <option value="11_2027">Dezembro de 2027</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="teacherSelect">Professor</label>
+                <select id="teacherSelect" onchange="loadTeacherClasses()">
+                    <option value="" disabled selected>-- Selecione o Professor --</option>
+                    <option value="geovani">Geovani Pires</option>
+                    <option value="patrick">Patrick Carvalhais</option>
+                    <option value="thais">Thais Bagolin</option>
+                    <option value="vinicius">Vinicius Eduardo</option>
+                    <option value="giulianna">Giulianna Miguel</option>
+                    <option value="renan">Renan Librandi</option>
+                    <option value="hillary">Hillary Akemi</option>
+                    <option value="jefferson">Jefferson Gomes</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="classSelect">Turma</label>
+                <select id="classSelect" onchange="onMonthOrClassChange()" disabled>
+                    <option value="" disabled selected>-- Escolha o professor primeiro --</option>
+                </select>
+            </div>
+
+            <!-- Status da Turma Selecionada -->
+            <div class="stats-row" id="statsRow" style="opacity: 0.4;">
+                <div class="lives-container" id="livesDisplay" title="Vidas da Turma (Mario Bros)">
+                    ❤️ ❤️ ❤️ <button class="btn-recover" onclick="recoverLife()" title="Trazer amigo para aula">+1 Vida</button>
+                </div>
+                <div class="streak-counter" id="streakCounterDisplay">
+                    🔥 Streak: Nível 1
+                </div>
+            </div>
+
+            <div style="font-size: 0.85rem; font-weight: 600; color: var(--accent-purple); padding: 0 0.2rem;" id="activeWeekLabel">
+                Aula Selecionada: -
+            </div>
+
+            <!-- Linha do Tempo Interativa -->
+            <div class="form-group" style="margin-top: 0.5rem;">
+                <label>Cronograma de Aulas (Clique na aula para gerenciar)</label>
+                <div class="timeline-container" id="timelineContainer">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; width: 100%; padding: 0.5rem;">
+                        Selecione uma turma acima para carregar as datas.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel de Lançamento da Aula Selecionada -->
+        <div class="card" id="controlPanel" style="display: none;">
+            <div class="form-group" id="activeWeekTitle">
+                <label>Lançamento de Chamada</label>
+            </div>
+
+            <div class="inputs-grid">
+                <div class="form-group">
+                    <label for="totalStudents">Total de Alunos</label>
+                    <input type="number" id="totalStudents" value="10" min="1" oninput="saveCurrentWeekData()">
+                </div>
+                <div class="form-group">
+                    <label for="absentStudents">Alunos Faltantes</label>
+                    <input type="number" id="absentStudents" value="0" min="0" oninput="saveCurrentWeekData()">
+                </div>
+            </div>
+
+            <!-- Campo de tarefas -->
+            <div class="form-group" id="homeworkGroup">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="checkHomework" onchange="saveCurrentWeekData()">
+                    <span>Todas as tarefas da turma estão em dia nesta semana?</span>
+                </label>
+            </div>
+
+            <!-- Caixa de Feedback -->
+            <div class="result-box" id="resultBox">
+                <span class="result-title">Status da Aula & Prêmios:</span>
+                <span class="result-status" id="resultStatusText">Insira os dados da aula.</span>
+                <div class="metric-detail" id="metricDetailText">Perda de vidas: 0</div>
+            </div>
+
+            <!-- Resumo para a Secretaria -->
+            <div class="admin-box">
+                <span class="admin-title">📈 Resumo</span>
+                <div class="admin-stats">
+                    <span>Total de faltas no mês: <strong id="adminTotalFaltas">0</strong></span>
+                    <span>Média de faltas: <strong id="adminMediaFaltas">0%</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ranking de Professores -->
+        <div class="card">
+            <span class="admin-title">🏆 Ranking de Professores (Menor % de Faltas no Mês)</span>
+            <div id="teacherRankingList" style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">Carregando ranking...</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Sistema de Gestão de Alunos • Foco na Retenção
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
