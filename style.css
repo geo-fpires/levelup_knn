@@ -151,7 +151,7 @@ select:disabled, input:disabled {
     color: var(--success-green);
     padding: 0.2rem 0.4rem;
     border-radius: 6px;
-    font-size: 0.7rem; /* Fonte menorzinha */
+    font-size: 0.6rem;
     cursor: pointer;
     font-weight: 700;
     margin-left: 0.3rem;
@@ -164,7 +164,7 @@ select:disabled, input:disabled {
 }
 
 .streak-counter {
-    font-size: 0.8rem; /* Diminuído para encaixar melhor */
+    font-size: 0.7rem;
     font-weight: 700;
     color: var(--warning-orange);
     display: flex;
