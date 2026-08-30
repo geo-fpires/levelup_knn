@@ -76,7 +76,6 @@ const rewardsCycle = {
     }
 };
 
-// Substituímos o objeto local por um repositório sincronizado com o Firestore
 let classRecords = {};
 
 let currentActiveTurma = null;
@@ -145,7 +144,6 @@ function onMonthOrClassChange() {
 
             const recordKey = `${currentActiveTurma.id}_${monthYearStr}`;
             
-            // Busca os dados do Firestore e SÓ desenha a tela depois que a resposta chegar
             db.collection("classRecords").doc(recordKey).get().then((doc) => {
                 if (doc.exists) {
                     classRecords[recordKey] = doc.data();
@@ -167,7 +165,6 @@ function onMonthOrClassChange() {
                 if (selectedClassIndex >= classDates.length) selectedClassIndex = classDates.length - 1;
                 if (selectedClassIndex < 0) selectedClassIndex = 0;
 
-                // AGORA sim os dados existem, chamamos o carregamento e o render com segurança!
                 loadWeekDataIntoForm();
                 renderDashboard();
             }).catch((error) => {
@@ -240,7 +237,6 @@ function saveCurrentWeekData() {
     updateTeacherRanking();
 }
 
-// Salva os dados diretamente no Firestore
 function saveToFirebase(recordKey) {
     db.collection("classRecords").doc(recordKey).set(classRecords[recordKey])
       .catch((error) => {
@@ -271,16 +267,28 @@ function renderDashboard() {
     let totalVidasPerdidas = 0;
 
     let currentStreak = 0;
-    for (let i = 0; i <= selectedClassIndex; i++) {
-        const w = weeksData[i];
-        const lost = getLivesLostByAbsences(w.absent);
+    let weeksWithAbsences = [];
 
-        if (lost === 0) {
-            currentStreak++;
-        } else {
+    weeksData.forEach((w, idx) => {
+        const lost = getLivesLostByAbsences(w.absent);
+        totalVidasPerdidas += lost;
+        if (lost > 0) {
+            weeksWithAbsences.push(idx);
+        }
+    });
+
+    for (let i = 0; i <= selectedClassIndex; i++) {
+        const teveFaltaAgora = weeksWithAbsences.includes(i);
+        const teveFaltaSemanaPassada = weeksWithAbsences.includes(i - 1);
+
+        if (teveFaltaAgora || teveFaltaSemanaPassada) {
             currentStreak = 1;
+        } else {
+            currentStreak++;
         }
     }
+    if (currentStreak < 1) currentStreak = 1;
+    if (currentStreak > 4) currentStreak = 4;
 
     classDates.forEach((d, idx) => {
         const wNum = idx + 1;
@@ -290,8 +298,6 @@ function renderDashboard() {
         totalFaltasMes += wData.absent;
         const lostLives = getLivesLostByAbsences(wData.absent);
         const failedHomework = !wData.homework;
-
-        totalVidasPerdidas += lostLives;
 
         let statusClass = '';
         let statusText = `Nível ${wNum}`;
@@ -331,7 +337,7 @@ function renderDashboard() {
     document.getElementById('streakCounterDisplay').innerHTML = `🔥 Streak: Nível ${currentStreak}`;
 
     document.getElementById('timelineContainer').innerHTML = timelineHtml || '<div style="font-size:0.8rem; color: var(--text-muted); text-align: center; width: 100%;">Nenhuma aula encontrada para este mês.</div>';
-    document.getElementById('activeWeekTitle').innerHTML = `<label>Faltas (Aula de ${activeDateStr})</label>`;
+    document.getElementById('activeWeekTitle').innerHTML = `<label>Lançamento de Chamada (Aula de ${activeDateStr})</label>`;
 
     document.getElementById('adminTotalFaltas').innerText = totalFaltasMes;
     const mediaGeral = totalAulasRegistradas > 0 ? ((totalFaltasMes / (totalAulasRegistradas * 10)) * 100).toFixed(1) : 0;
@@ -363,8 +369,6 @@ function calculateMetrics() {
     const resultText = document.getElementById('resultStatusText');
     const detailText = document.getElementById('metricDetailText');
 
-    const livesLostThisClass = getLivesLostByAbsences(absent);
-
     const baseDate = new Date(2026, 8, 1);
     const targetDate = new Date(currentYearVal, currentMonthVal, 1);
     const diffMonths = (targetDate.getFullYear() - baseDate.getFullYear()) * 12 + (targetDate.getMonth() - baseDate.getMonth());
@@ -372,16 +376,25 @@ function calculateMetrics() {
     let cicloMes = (diffMonths % 5) + 1;
     if (cicloMes < 1) cicloMes += 5;
 
+    let weeksWithAbsences = [];
+    recordData.weeks.forEach((w, idx) => {
+        if (getLivesLostByAbsences(w.absent) > 0) {
+            weeksWithAbsences.push(idx);
+        }
+    });
+
     let nivelAtualStreak = 0;
     for (let i = 0; i <= selectedClassIndex; i++) {
-        const w = recordData.weeks[i];
-        const lost = getLivesLostByAbsences(w.absent);
-        if (lost === 0) {
-            nivelAtualStreak++;
-        } else {
+        const teveFaltaAgora = weeksWithAbsences.includes(i);
+        const teveFaltaSemanaPassada = weeksWithAbsences.includes(i - 1);
+
+        if (teveFaltaAgora || teveFaltaSemanaPassada) {
             nivelAtualStreak = 1;
+        } else {
+            nivelAtualStreak++;
         }
     }
+    if (nivelAtualStreak < 1) nivelAtualStreak = 1;
     if (nivelAtualStreak > 4) nivelAtualStreak = 4;
 
     const premioInfo = rewardsCycle[cicloMes][nivelAtualStreak] || { premio: "Nenhum prêmio", dolares: 0 };
