@@ -351,8 +351,15 @@ function renderDashboard() {
     document.getElementById('activeWeekTitle').innerHTML = `<label>Faltas (Aula de ${activeDateStr})</label>`;
 
     document.getElementById('adminTotalFaltas').innerText = totalFaltasMes;
-    const mediaGeral = totalAulasRegistradas > 0 ? ((totalFaltasMes / (totalAulasRegistradas * 10)) * 100).toFixed(1) : 0;
-    document.getElementById('adminMediaFaltas').innerText = mediaGeral + '%';
+    
+        // Calcula a média real com base na soma dos alunos esperados em cada aula registrada, evitando o valor fixo de 10
+        let totalAlunosEsperadosMes = 0;
+        weeksData.forEach((w) => {
+            totalAlunosEsperadosMes += w.total;
+        });
+
+        const mediaGeral = totalAlunosEsperadosMes > 0 ? ((totalFaltasMes / totalAlunosEsperadosMes) * 100).toFixed(1) : 0;
+        document.getElementById('adminMediaFaltas').innerText = mediaGeral + '%';
 
     updateTeacherRanking();
 }
