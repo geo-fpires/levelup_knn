@@ -1,3 +1,16 @@
+const firebaseConfig = {
+    apiKey: "AIzaSyD108h0XhtqjXldg-bLL0-kELYMWRvPVNM",
+    authDomain: "level-up---knn.firebaseapp.com",
+    projectId: "level-up---knn",
+    storageBucket: "level-up---knn.firebasestorage.app",
+    messagingSenderId: "162652615657",
+    appId: "1:162652615657:web:705ebb78d45a411ef91178"
+};
+
+// Inicializa o Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 const schoolData = {
     geovani: {
         classes: [
@@ -63,7 +76,8 @@ const rewardsCycle = {
     }
 };
 
-let classRecords = JSON.parse(localStorage.getItem('knn_class_records')) || {};
+// Substituímos o objeto local por um repositório sincronizado com o Firestore
+let classRecords = {};
 
 let currentActiveTurma = null;
 let selectedClassIndex = 0; 
@@ -130,26 +144,34 @@ function onMonthOrClassChange() {
             statsRow.style.opacity = '1';
 
             const recordKey = `${currentActiveTurma.id}_${monthYearStr}`;
-            if (!classRecords[recordKey]) {
-                const dates = getExactClassDates(currentYearVal, currentMonthVal, currentActiveTurma.dayOfWeek);
-                classRecords[recordKey] = {
-                    weeks: dates.map(() => ({ total: 10, absent: 0, homework: true })),
-                    bonusLives: 0
-                };
-                saveToLocalStorage();
-            }
+            
+            // Busca os dados do Firestore em tempo real para essa turma/mês
+            db.collection("classRecords").doc(recordKey).get().then((doc) => {
+                if (doc.exists) {
+                    classRecords[recordKey] = doc.data();
+                } else {
+                    const dates = getExactClassDates(currentYearVal, currentMonthVal, currentActiveTurma.dayOfWeek);
+                    classRecords[recordKey] = {
+                        weeks: dates.map(() => ({ total: 10, absent: 0, homework: true })),
+                        bonusLives: 0
+                    };
+                    db.collection("classRecords").doc(recordKey).set(classRecords[recordKey]);
+                }
 
-            const classDates = getExactClassDates(currentYearVal, currentMonthVal, currentActiveTurma.dayOfWeek);
-            const today = new Date();
-            selectedClassIndex = 0;
-            classDates.forEach((d, idx) => {
-                if (d <= today) selectedClassIndex = idx;
+                const classDates = getExactClassDates(currentYearVal, currentMonthVal, currentActiveTurma.dayOfWeek);
+                const today = new Date();
+                selectedClassIndex = 0;
+                classDates.forEach((d, idx) => {
+                    if (d <= today) selectedClassIndex = idx;
+                });
+                if (selectedClassIndex >= classDates.length) selectedClassIndex = classDates.length - 1;
+                if (selectedClassIndex < 0) selectedClassIndex = 0;
+
+                loadWeekDataIntoForm();
+                renderDashboard();
+            }).catch((error) => {
+                console.error("Erro ao carregar dados do Firestore: ", error);
             });
-            if (selectedClassIndex >= classDates.length) selectedClassIndex = classDates.length - 1;
-            if (selectedClassIndex < 0) selectedClassIndex = 0;
-
-            loadWeekDataIntoForm();
-            renderDashboard();
         }
     } else {
         controlPanel.style.display = 'none';
@@ -170,7 +192,7 @@ function recoverLife() {
     const recordKey = `${currentActiveTurma.id}_${monthYearStr}`;
     if (classRecords[recordKey]) {
         classRecords[recordKey].bonusLives++;
-        saveToLocalStorage();
+        saveToFirebase(recordKey);
         renderDashboard();
         calculateMetrics();
     }
@@ -187,6 +209,8 @@ function loadWeekDataIntoForm() {
     if (!currentActiveTurma) return;
     const monthYearStr = document.getElementById('monthSelect').value;
     const recordKey = `${currentActiveTurma.id}_${monthYearStr}`;
+    
+    if (!classRecords[recordKey]) return;
     const weekData = classRecords[recordKey].weeks[selectedClassIndex];
 
     document.getElementById('totalStudents').value = weekData.total;
@@ -205,17 +229,22 @@ function saveCurrentWeekData() {
     const absent = parseInt(document.getElementById('absentStudents').value) || 0;
     const homework = document.getElementById('checkHomework').checked;
 
+    if (!classRecords[recordKey]) return;
     classRecords[recordKey].weeks[selectedClassIndex] = { total, absent, homework };
     
-    saveToLocalStorage();
+    saveToFirebase(recordKey);
 
     renderDashboard();
     calculateMetrics();
     updateTeacherRanking();
 }
 
-function saveToLocalStorage() {
-    localStorage.setItem('knn_class_records', JSON.stringify(classRecords));
+// Salva os dados diretamente no Firestore
+function saveToFirebase(recordKey) {
+    db.collection("classRecords").doc(recordKey).set(classRecords[recordKey])
+      .catch((error) => {
+          console.error("Erro ao salvar no Firestore: ", error);
+      });
 }
 
 function renderDashboard() {
@@ -224,6 +253,8 @@ function renderDashboard() {
     const classDates = getExactClassDates(currentYearVal, currentMonthVal, currentActiveTurma.dayOfWeek);
     const monthYearStr = document.getElementById('monthSelect').value;
     const recordKey = `${currentActiveTurma.id}_${monthYearStr}`;
+    
+    if (!classRecords[recordKey]) return;
     const recordData = classRecords[recordKey];
     const weeksData = recordData.weeks;
 
@@ -316,6 +347,8 @@ function calculateMetrics() {
     
     const monthYearStr = document.getElementById('monthSelect').value;
     const recordKey = `${currentActiveTurma.id}_${monthYearStr}`;
+    
+    if (!classRecords[recordKey]) return;
     const recordData = classRecords[recordKey];
     
     let totalVidasPerdidasCalc = 0;
@@ -354,14 +387,13 @@ function calculateMetrics() {
 
     resultBox.className = "result-box";
 
-    // Linhas estruturadas para o painel
     let linhaStreak = "";
     let linhaPremio = "";
     let linhaBonus = "";
     let linhaAlerta = "";
 
     if (!homeworkOk) {
-        linhaAlerta = `<br>⚠️ ALERTA: Professor, notifique a turma que o super prêmio não será entregue se houver tarefas pendentes no final do mês, mesmo se o streak estiver em nível máximo."`;
+        linhaAlerta = `<br>⚠️ ALERTA: "Pessoal, o sistema me disse que tem tarefa pendente de vocês. Lembrem-se que se chegarem no fim do mês com streak alto, mas sem as tarefas em dia, o super prêmio não vai valer."`;
     }
 
     if (vidasFinais <= 0) {
@@ -370,7 +402,6 @@ function calculateMetrics() {
         resultText.innerText = '💀 Vidas Zeradas!';
         detailText.innerHTML = `A turma perdeu todas as vidas e está sem direito a concorrer aos prêmios até recuperarem uma vida!`;
     } else if (absent > 0) {
-        // Se faltou alguém na semana atual, streak volta para o nível 1 e NÃO garante prêmio para a próxima semana
         resultBox.classList.add('danger');
         resultText.style.color = 'var(--danger-red)';
         resultText.innerText = '⚠️ Faltas registradas nesta aula!';
@@ -400,61 +431,71 @@ function updateTeacherRanking() {
     let teacherStats = [];
     const monthYearStr = document.getElementById('monthSelect').value;
 
+    let loadedCount = 0;
+    const totalTeachers = Object.keys(schoolData).length;
+
     for (const teacherKey in schoolData) {
         let totalFaltasTeacher = 0;
         let totalAlunosEsperadosTeacher = 0;
 
-        schoolData[teacherKey].classes.forEach(turma => {
+        let classPromises = schoolData[teacherKey].classes.map(turma => {
             const recordKey = `${turma.id}_${monthYearStr}`;
-            if (classRecords[recordKey] && classRecords[recordKey].weeks) {
-                classRecords[recordKey].weeks.forEach(w => {
-                    totalFaltasTeacher += w.absent;
-                    totalAlunosEsperadosTeacher += w.total;
+            return db.collection("classRecords").doc(recordKey).get().then(doc => {
+                if (doc.exists && doc.data().weeks) {
+                    doc.data().weeks.forEach(w => {
+                        totalFaltasTeacher += w.absent;
+                        totalAlunosEsperadosTeacher += w.total;
+                    });
+                }
+            });
+        });
+
+        Promise.all(classPromises).then(() => {
+            const percent = totalAlunosEsperadosTeacher > 0 
+                ? ((totalFaltasTeacher / totalAlunosEsperadosTeacher) * 100).toFixed(1) 
+                : 0;
+
+            const teacherNames = {
+                geovani: "Geovani Pires",
+                patrick: "Patrick Carvalhais",
+                thais: "Thais Bagolin",
+                giulianna: "Giulianna Miguel",
+                vinicius: "Vinicius Eduardo",
+                renan: "Renan Librandi",
+                hillary: "Hillary Akemi",
+                jefferson: "Jefferson Gomes"
+            };
+
+            teacherStats.push({
+                name: teacherNames[teacherKey] || teacherKey,
+                percent: parseFloat(percent),
+                faltas: totalFaltasTeacher
+            });
+
+            loadedCount++;
+            if (loadedCount === totalTeachers) {
+                teacherStats.sort((a, b) => a.percent - b.percent);
+
+                let html = '';
+                teacherStats.forEach((t, index) => {
+                    let medalha = '';
+                    if (index === 0) medalha = '🥇 ';
+                    else if (index === 1) medalha = '🥈 ';
+                    else if (index === 2) medalha = '🥉 ';
+                    else medalha = `${index + 1}º `;
+
+                    html += `
+                        <div class="ranking-item">
+                            <span>${medalha}<strong>${t.name}</strong></span>
+                            <span><strong>${t.percent}%</strong> de faltas</span>
+                        </div>
+                    `;
                 });
+
+                rankingContainer.innerHTML = html;
             }
         });
-
-        const percent = totalAlunosEsperadosTeacher > 0 
-            ? ((totalFaltasTeacher / totalAlunosEsperadosTeacher) * 100).toFixed(1) 
-            : 0;
-
-        const teacherNames = {
-            geovani: "Geovani Pires",
-            patrick: "Patrick Carvalhais",
-            thais: "Thais Bagolin",
-            giulianna: "Giulianna Miguel",
-            vinicius: "Vinicius Eduardo",
-            renan: "Renan Librandi",
-            hillary: "Hillary Akemi",
-            jefferson: "Jefferson Gomes"
-        };
-
-        teacherStats.push({
-            name: teacherNames[teacherKey] || teacherKey,
-            percent: parseFloat(percent),
-            faltas: totalFaltasTeacher
-        });
     }
-
-    teacherStats.sort((a, b) => a.percent - b.percent);
-
-    let html = '';
-    teacherStats.forEach((t, index) => {
-        let medalha = '';
-        if (index === 0) medalha = '🥇 ';
-        else if (index === 1) medalha = '🥈 ';
-        else if (index === 2) medalha = '🥉 ';
-        else medalha = `${index + 1}º `;
-
-        html += `
-            <div class="ranking-item">
-                <span>${medalha}<strong>${t.name}</strong></span>
-                <span><strong>${t.percent}%</strong> de faltas</span>
-            </div>
-        `;
-    });
-
-    rankingContainer.innerHTML = html;
 }
 
 window.addEventListener('DOMContentLoaded', () => {
