@@ -196,6 +196,7 @@ function recoverLife() {
     }
 }
 
+// REGRA AJUSTADA: 1 ou 2 faltas já tiram 1 vida!
 function getLivesLostByAbsences(absentCount) {
     if (absentCount >= 5) return 3;
     if (absentCount >= 3) return 2;
