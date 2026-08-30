@@ -337,7 +337,7 @@ function renderDashboard() {
     document.getElementById('streakCounterDisplay').innerHTML = `🔥 Streak: Nível ${currentStreak}`;
 
     document.getElementById('timelineContainer').innerHTML = timelineHtml || '<div style="font-size:0.8rem; color: var(--text-muted); text-align: center; width: 100%;">Nenhuma aula encontrada para este mês.</div>';
-    document.getElementById('activeWeekTitle').innerHTML = `<label>Lançamento de Chamada (Aula de ${activeDateStr})</label>`;
+    document.getElementById('activeWeekTitle').innerHTML = `<label>Faltas (Aula de ${activeDateStr})</label>`;
 
     document.getElementById('adminTotalFaltas').innerText = totalFaltasMes;
     const mediaGeral = totalAulasRegistradas > 0 ? ((totalFaltasMes / (totalAulasRegistradas * 10)) * 100).toFixed(1) : 0;
