@@ -184,19 +184,23 @@ function selectWeek(index) {
     renderDashboard();
 }
 
-function recoverLife() {
+function recoverLife(action = 'add') {
     if (!currentActiveTurma) return;
     const monthYearStr = document.getElementById('monthSelect').value;
     const recordKey = `${currentActiveTurma.id}_${monthYearStr}`;
+    
     if (classRecords[recordKey]) {
-        classRecords[recordKey].bonusLives++;
+        if (action === 'add') {
+            classRecords[recordKey].bonusLives++;
+        } else if (action === 'remove' && classRecords[recordKey].bonusLives > 0) {
+            classRecords[recordKey].bonusLives--;
+        }
         saveToFirebase(recordKey);
         renderDashboard();
         calculateMetrics();
     }
 }
 
-// REGRA AJUSTADA: 1 ou 2 faltas já tiram 1 vida!
 function getLivesLostByAbsences(absentCount) {
     if (absentCount >= 5) return 3;
     if (absentCount >= 3) return 2;
@@ -332,13 +336,19 @@ function renderDashboard() {
     for (let i = 0; i < 3; i++) {
         heartsHtml += i < vidasRestantes ? '❤️ ' : '🖤 ';
     }
-    heartsHtml += `<button class="btn-recover" onclick="recoverLife()" title="Trazer amigo para aula">+1 Vida</button>`;
+    // Botões de mais e menos para somar ou remover vidas bônus com facilidade
+    heartsHtml += `
+        <span style="display: inline-flex; gap: 2px; margin-left: 5px; vertical-align: middle;">
+            <button class="btn-recover" onclick="recoverLife('add')" title="Adicionar Vida Bônus">+1</button>
+            <button class="btn-recover" onclick="recoverLife('remove')" title="Remover Vida Bônus" style="background: rgba(239, 68, 68, 0.15); border-color: var(--danger-red); color: var(--danger-red);">-1</button>
+        </span>
+    `;
 
     document.getElementById('livesDisplay').innerHTML = heartsHtml;
     document.getElementById('streakCounterDisplay').innerHTML = `🔥 Streak: Nível ${currentStreak}`;
 
     document.getElementById('timelineContainer').innerHTML = timelineHtml || '<div style="font-size:0.8rem; color: var(--text-muted); text-align: center; width: 100%;">Nenhuma aula encontrada para este mês.</div>';
-    document.getElementById('activeWeekTitle').innerHTML = `<label>Faltas (Aula de ${activeDateStr})</label>`;
+    document.getElementById('activeWeekTitle').innerHTML = `<label>Lançamento de Chamada (Aula de ${activeDateStr})</label>`;
 
     document.getElementById('adminTotalFaltas').innerText = totalFaltasMes;
     const mediaGeral = totalAulasRegistradas > 0 ? ((totalFaltasMes / (totalAulasRegistradas * 10)) * 100).toFixed(1) : 0;
