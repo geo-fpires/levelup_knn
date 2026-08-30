@@ -438,7 +438,7 @@ function calculateMetrics() {
         resultText.innerText = '⚠️ Faltas registradas nesta aula!';
         
         linhaStreak = `Streak voltou para o Nível 1!`;
-        linhaPremio = `🏆 Prêmio: Nenhum garantido para a próxima semana (houve falta nesta aula)`;
+        linhaPremio = `🏆 Prêmio: Nenhum prêmio garantido para a próxima semana (houve falta nesta aula)`;
         linhaBonus = `🚀 Bônus: $0 Dólares por aluno`;
         
         detailText.innerHTML = `${linhaStreak}<br>${linhaPremio}<br>${linhaBonus}${linhaAlerta}`;
