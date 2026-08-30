@@ -424,7 +424,7 @@ function calculateMetrics() {
     let linhaAlerta = "";
 
     if (!homeworkOk) {
-        linhaAlerta = `<br>⚠️ ALERTA: Professor, notifique a turma que o super prêmio não será entregue se houver tarefas pendentes no final do mês, mesmo se o streak estiver em nível máximo."`;
+        linhaAlerta = `<br>⚠️ ALERTA: Professor, notifique a turma que o super prêmio não será entregue se houver tarefas pendentes no final do mês, mesmo se o streak estiver em nível máximo.`;
     }
 
     if (vidasFinais <= 0) {
