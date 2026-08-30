@@ -145,7 +145,7 @@ function onMonthOrClassChange() {
 
             const recordKey = `${currentActiveTurma.id}_${monthYearStr}`;
             
-            // Busca os dados do Firestore em tempo real para essa turma/mês
+            // Busca os dados do Firestore e SÓ desenha a tela depois que a resposta chegar
             db.collection("classRecords").doc(recordKey).get().then((doc) => {
                 if (doc.exists) {
                     classRecords[recordKey] = doc.data();
@@ -167,6 +167,7 @@ function onMonthOrClassChange() {
                 if (selectedClassIndex >= classDates.length) selectedClassIndex = classDates.length - 1;
                 if (selectedClassIndex < 0) selectedClassIndex = 0;
 
+                // AGORA sim os dados existem, chamamos o carregamento e o render com segurança!
                 loadWeekDataIntoForm();
                 renderDashboard();
             }).catch((error) => {
