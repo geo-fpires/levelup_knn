@@ -16,7 +16,6 @@ const schoolData = {
         classes: [
             { id: "geo_ita_3", name: "Italiano 3 - Segunda", dayOfWeek: 1 },
             { id: "geo_ita_1", name: "Italiano 1 - Segunda", dayOfWeek: 1 },
-            { id: "geo_teens_1", name: "Teens 1 - Quarta", dayOfWeek: 3 },
             { id: "geo_cp_1", name: "Continua a Parlare 1 - Quarta", dayOfWeek: 3 },
             { id: "geo_book_3", name: "Book 3 - Sábado", dayOfWeek: 6 },
             { id: "geo_book_1", name: "Book 1 - Sábado", dayOfWeek: 6 }
