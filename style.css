@@ -131,29 +131,32 @@ select:disabled, input:disabled {
     justify-content: space-between;
     align-items: center;
     background: rgba(15, 12, 26, 0.6);
-    padding: 0.75rem 1rem;
+    padding: 0.6rem 0.8rem;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.05);
+    gap: 0.5rem;
 }
 
 .lives-container {
     display: flex;
-    gap: 0.35rem;
-    font-size: 1.2rem;
+    gap: 0.25rem;
+    font-size: 1rem; /* Diminuído de 1.2rem para 1rem */
     align-items: center;
+    white-space: nowrap;
 }
 
 .btn-recover {
     background: rgba(34, 197, 94, 0.15);
     border: 1px solid var(--success-green);
     color: var(--success-green);
-    padding: 0.25rem 0.5rem;
+    padding: 0.2rem 0.4rem;
     border-radius: 6px;
-    font-size: 0.75rem;
+    font-size: 0.7rem; /* Fonte menorzinha */
     cursor: pointer;
     font-weight: 700;
-    margin-left: 0.5rem;
+    margin-left: 0.3rem;
     transition: background 0.2s;
+    white-space: nowrap;
 }
 
 .btn-recover:hover {
@@ -161,12 +164,13 @@ select:disabled, input:disabled {
 }
 
 .streak-counter {
-    font-size: 0.9rem;
+    font-size: 0.8rem; /* Diminuído para encaixar melhor */
     font-weight: 700;
     color: var(--warning-orange);
     display: flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.2rem;
+    white-space: nowrap;
 }
 
 /* Linha do Tempo das Semanas (Clicável) */
