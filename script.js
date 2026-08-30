@@ -439,7 +439,7 @@ function calculateMetrics() {
         
         linhaStreak = `Streak voltou para o Nível 1!`;
         linhaPremio = `🏆 Prêmio: Nenhum prêmio garantido para a próxima semana (houve falta nesta aula)`;
-        linhaBonus = `🚀 Bônus: $0 Dólares por aluno`;
+        linhaBonus = `🚀 Bônus: $0 por aluno`;
         
         detailText.innerHTML = `${linhaStreak}<br>${linhaPremio}<br>${linhaBonus}${linhaAlerta}`;
     } else {
@@ -449,7 +449,7 @@ function calculateMetrics() {
         
         linhaStreak = `Streak mantido no Nível ${nivelAtualStreak}!`;
         linhaPremio = `🏆 Prêmio: ${premioInfo.premio}`;
-        linhaBonus = `🚀 Bônus: $${premioInfo.dolares} Dólares por aluno`;
+        linhaBonus = `🚀 Bônus: $${premioInfo.dolares} por aluno`;
         
         detailText.innerHTML = `${linhaStreak}<br>${linhaPremio}<br>${linhaBonus}${linhaAlerta}`;
     }
